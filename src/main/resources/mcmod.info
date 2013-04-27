@@ -1,0 +1,20 @@
+[
+  {
+    "modid": "ArcaneFluids",
+    "name": "Arcane Fluids",
+    "description": "Provides item tanks and pipes with a magic flavour",
+    "url": "http://github.com/bshelden/ArcaneFluids",
+    "updateUrl": "",
+    "logoFile": "",
+    "version": "0.8.0",
+    "credits": "By Byron Shelden, with artwork by Sheryl King",
+    "parent": "",
+    "authors": [ "Byron Shelden", "Sheryl King" ],
+    "mcversion": "1.5.1",
+    "screenshots": "",
+    "requiredMods": [
+      "Forge@[7.7.1,)"
+    ],
+    "useDependencyInformation": "true"
+  }
+]
