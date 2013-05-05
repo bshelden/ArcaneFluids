@@ -79,7 +79,7 @@ object ArcaneFluids {
   private def registerRecipes() {
     GameRegistry.addRecipe(
       new ItemStack(blocks.tank, 1),
-      "IQI", "I I", "IQI",
+      "IQI", "Q Q", "IQI",
       new Character('I'), new ItemStack(Item.ingotIron),
       new Character('Q'), new ItemStack(Item.netherQuartz))
 
