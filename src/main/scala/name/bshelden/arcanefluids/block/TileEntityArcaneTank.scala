@@ -18,14 +18,10 @@ import net.minecraft.block.Block
  * (c) 2013 Byron Shelden
  * See COPYING for details
  */
-class TileEntityArcaneTank() extends TileEntity with ITankContainer {
-  val capacity = LiquidContainerRegistry.BUCKET_VOLUME * 16
+class TileEntityArcaneTank extends TileEntity with ITankContainer {
+  import TileEntityArcaneTank._
 
-  val NBT_HAS_LIQUID  = "hasLiquid"
-  val NBT_LIQUID_ID   = "liquidId"
-  val NBT_LIQUID_META = "liquidMeta"
-  val NBT_LIQUID_TAG  = "tag"
-  val NBT_LIQUID_AMT  = "liquidAmt"
+  val capacity = LiquidContainerRegistry.BUCKET_VOLUME * 16
 
   private val tank: LiquidTank = new LiquidTank(capacity)
 
@@ -139,4 +135,11 @@ class TileEntityArcaneTank() extends TileEntity with ITankContainer {
   override def onDataPacket(net: INetworkManager, pkt: Packet132TileEntityData) {
     readFromNBT(pkt.customParam1)
   }
+}
+object TileEntityArcaneTank {
+  val NBT_HAS_LIQUID  = "hasLiquid"
+  val NBT_LIQUID_ID   = "liquidId"
+  val NBT_LIQUID_META = "liquidMeta"
+  val NBT_LIQUID_TAG  = "tag"
+  val NBT_LIQUID_AMT  = "liquidAmt"
 }

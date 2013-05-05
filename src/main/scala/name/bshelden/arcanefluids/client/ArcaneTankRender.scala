@@ -3,6 +3,7 @@ package name.bshelden.arcanefluids.client
 import org.lwjgl.opengl.GL11
 
 import cpw.mods.fml.client.registry.{ISimpleBlockRenderingHandler, RenderingRegistry}
+
 import net.minecraft.block.Block
 import net.minecraft.client.renderer.RenderBlocks
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
@@ -12,9 +13,10 @@ import net.minecraftforge.liquids.LiquidStack
 
 import name.bshelden.arcanefluids.block.TileEntityArcaneTank
 import name.bshelden.arcanefluids.client.render._
-import name.bshelden.arcanefluids.client.models._
+import name.bshelden.arcanefluids.model.Cuboid
+import name.bshelden.arcanefluids.model.Models._
 import name.bshelden.arcanefluids.client.render.Render._
-import name.bshelden.arcanefluids.ArcaneFluids
+import name.bshelden.arcanefluids.client.render.Liquids._
 
 /**
  * Rendering for the arcane tank.
@@ -34,7 +36,7 @@ class ArcaneTankRender extends TileEntitySpecialRenderer with ISimpleBlockRender
             GL11.glEnable(GL11.GL_CULL_FACE)
             GL11.glTranslatef(-0.5F, -0.5F, -0.5F)
           }
-          _ <- draw(renderModelWithBlock(ArcaneTankFrameModel, Block.blockNetherQuartz, 1))
+          _ <- draw(renderModelWithBlock(ArcaneTankFrameModel, block, 0))
         } yield (())
       }
     }.run()
@@ -56,13 +58,12 @@ class ArcaneTankRender extends TileEntitySpecialRenderer with ISimpleBlockRender
 
   def renderTileEntityAt(rawTE: TileEntity, x: Double, y: Double, z: Double, facing: Float) {
     val te = rawTE.asInstanceOf[TileEntityArcaneTank]
-
     for {
       liquid  <- te.getLiquid
       renders <- Option(getRendersForLiquid(liquid, te.worldObj))
     } {
       withPushedMatrix {
-        withPushedAttrib(GL11.GL_ENABLE_BIT) {
+        withPushedAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT) {
           for {
             _ <- Render.liftIO { bindTextureByName(liquid.getTextureSheet()) }
             _ <- Render {
@@ -70,19 +71,31 @@ class ArcaneTankRender extends TileEntitySpecialRenderer with ISimpleBlockRender
               GL11.glEnable(GL11.GL_CULL_FACE)
               GL11.glEnable(GL11.GL_BLEND)
               GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-              GL11.glColor3f(0.9f, 0.9f, 0.9f)
               GL11.glTranslatef(x.toFloat, y.toFloat, z.toFloat)
             }
             stage = ((liquid.amount.toFloat / te.capacity.toFloat) * (MAX_STAGES - 1)).toInt
             _ <- renders(stage)
-            fieldMin = 1d / 16d
-            fieldMax = 1 - fieldMin
             _ <- renderField()
           } yield (())
         }
       }.run()
     }
   }
+
+  private def renderField(): Render[Unit] = {
+    val fieldMin = 1d / 16d
+    val fieldMax = 1 - fieldMin
+    val fieldCuboid = Cuboid(fieldMin, fieldMin, fieldMin, fieldMax, fieldMax, fieldMax)
+
+    for {
+      _ <- Render { GL11.glColor4f(1f, 1f, 1f, 0.33f) }
+      _ <- draw(renderCuboidWithBlock(fieldCuboid, Block.ice))
+    } yield (())
+  }
+}
+object ArcaneTankRender {
+  val renderId = RenderingRegistry.getNextAvailableRenderId()
+  private val MAX_STAGES = 100
 
   private var renderCache = Map.empty[LiquidStack, Array[Render[Unit]]]
   private def getRendersForLiquid(liquid: LiquidStack, world: World): Array[Render[Unit]] = {
@@ -94,7 +107,7 @@ class ArcaneTankRender extends TileEntitySpecialRenderer with ISimpleBlockRender
         val fill = (1-(2*w)) * (stage.toDouble / MAX_STAGES.toDouble)
         val cuboid = Cuboid(w, w, w, 1-w, w + fill, 1-w)
 
-        renderLiquid(liquid, world, cuboid, stage).compile()
+        draw(renderCuboid(cuboid, getTextureForLiquid(liquid))).compile()
       }
 
       val stageArray = stages.toArray
@@ -102,33 +115,4 @@ class ArcaneTankRender extends TileEntitySpecialRenderer with ISimpleBlockRender
       stageArray
     }
   }
-
-  private def renderLiquid(liquid: LiquidStack, world: World, cuboid: Cuboid, stage: Int) = {
-    val block = if (liquid.itemID < Block.blocksList.length && Block.blocksList(liquid.itemID) != null) { Block.blocksList(liquid.itemID) } else { Block.waterStill }
-    val mTexture = Option(liquid.canonical().getRenderingIcon)
-    def getTexture(side: Side) = mTexture.getOrElse {
-      val texSide = if (ArcaneFluids.config.clientRenderLiquidAsTop) { Side.Top.sideId } else { side.sideId }
-      block.getIcon(texSide, liquid.itemMeta)
-    }
-
-    draw(renderCuboid(cuboid, getTexture))
-  }
-
-  private def renderField(): Render[Unit] = {
-    val fieldMin = 1d / 16d
-    val fieldMax = 1 - fieldMin
-    val fieldCuboid = Cuboid(fieldMin, fieldMin, fieldMin, fieldMax, fieldMax, fieldMax)
-
-    withPushedAttrib(GL11.GL_COLOR_BUFFER_BIT) {
-      for {
-        _ <- Render { GL11.glColor4f(1f, 1f, 1f, 0.33f) }
-        _ <- draw(renderCuboidWithBlock(fieldCuboid, Block.ice))
-      } yield (())
-    }
-  }
-}
-object ArcaneTankRender {
-  val renderId = RenderingRegistry.getNextAvailableRenderId()
-
-  private val MAX_STAGES = 100
 }

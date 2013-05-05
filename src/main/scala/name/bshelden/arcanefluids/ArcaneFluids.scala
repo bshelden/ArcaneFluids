@@ -9,8 +9,7 @@ import java.util.logging.{Logger, Level}
 import net.minecraftforge.common.Configuration
 import cpw.mods.fml.common.registry.{GameRegistry, LanguageRegistry}
 import net.minecraft.item.{Item, ItemStack}
-import net.minecraft.block.Block
-import name.bshelden.arcanefluids.block.{TileEntityArcaneTank, BlockArcaneTank, BlockArcanePipe}
+import name.bshelden.arcanefluids.block.{TileEntityArcanePipe, TileEntityArcaneTank, BlockArcaneTank, BlockArcanePipe}
 
 /**
  * Primary mod object for Arcane Fluids
@@ -68,26 +67,27 @@ object ArcaneFluids {
   private def registerBlocks() {
     GameRegistry.registerBlock(blocks.tank, "arcaneTank")
     GameRegistry.registerTileEntity(classOf[TileEntityArcaneTank], "arcaneTank")
-//    GameRegistry.registerBlock(blocks.pipe, "arcanePipe")
-//    GameRegistry.registerTileEntity(classOf[TileEntityArcanePipe], "arcanePipe")
+    GameRegistry.registerBlock(blocks.pipe, "arcanePipe")
+    GameRegistry.registerTileEntity(classOf[TileEntityArcanePipe], "arcanePipe")
   }
 
   private def initTranslations() {
-    LanguageRegistry.addName(blocks.tank, "Arcane Tank")
-//    LanguageRegistry.addName(blocks.pipe, "Arcane Pipe")
+    LanguageRegistry.addName(blocks.tank, "Fluid Vessel")
+    LanguageRegistry.addName(blocks.pipe, "Flow Director")
   }
 
   private def registerRecipes() {
     GameRegistry.addRecipe(
       new ItemStack(blocks.tank, 1),
-      "QQQ", "Q Q", "QQQ",
+      "IQI", "I I", "IQI",
+      new Character('I'), new ItemStack(Item.ingotIron),
       new Character('Q'), new ItemStack(Item.netherQuartz))
 
 /*
     GameRegistry.addRecipe(
       new ItemStack(blocks.pipe, 1),
-      "GGG", "   ", "GGG",
-      new Character('G'), new ItemStack(Block.glass))
+      "QQQ", "   ", "QQQ",
+      new Character('Q'), new ItemStack(Item.netherQuartz))
 */
   }
 

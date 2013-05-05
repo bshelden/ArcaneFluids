@@ -3,8 +3,9 @@ package name.bshelden.arcanefluids.client.render
 import org.lwjgl.opengl.GL11
 
 import net.minecraft.block.Block
-import net.minecraft.client.renderer.{GLAllocation, Tessellator, RenderBlocks}
+import net.minecraft.client.renderer._
 import net.minecraft.util.Icon
+import name.bshelden.arcanefluids.model.{Cuboid, Model, BlockSide}
 
 /**
  * Library for working with rendering.
@@ -33,11 +34,11 @@ object Render {
 
   def pure[A](a: => A): Render[A] = mk(a)
 
-  def getTextureForBlock(block: Block, metadata: Int = 0): (Side => Icon) = { side =>
+  def getTextureForBlock(block: Block, metadata: Int = 0): (BlockSide => Icon) = { side =>
     block.getIcon(side.sideId, metadata)
   }
 
-  def renderCuboid(cuboid: Cuboid, getTexture: Side => Icon): Render[Unit] = mk {
+  def renderCuboid(cuboid: Cuboid, getTexture: BlockSide => Icon): Render[Unit] = mk {
     val r: RenderBlocks = new RenderBlocks
 
     r.renderMinX = cuboid.minX
@@ -48,18 +49,18 @@ object Render {
     r.renderMaxZ = cuboid.maxZ
     r.enableAO = false
 
-    r.renderBottomFace(null, 0, 0, 0, getTexture(Side.Bottom))
-    r.renderTopFace   (null, 0, 0, 0, getTexture(Side.Top))
-    r.renderEastFace  (null, 0, 0, 0, getTexture(Side.East))
-    r.renderWestFace  (null, 0, 0, 0, getTexture(Side.West))
-    r.renderNorthFace (null, 0, 0, 0, getTexture(Side.North))
-    r.renderSouthFace (null, 0, 0, 0, getTexture(Side.South))
+    r.renderBottomFace(null, 0, 0, 0, getTexture(BlockSide.Bottom))
+    r.renderTopFace   (null, 0, 0, 0, getTexture(BlockSide.Top))
+    r.renderEastFace  (null, 0, 0, 0, getTexture(BlockSide.East))
+    r.renderWestFace  (null, 0, 0, 0, getTexture(BlockSide.West))
+    r.renderNorthFace (null, 0, 0, 0, getTexture(BlockSide.North))
+    r.renderSouthFace (null, 0, 0, 0, getTexture(BlockSide.South))
   }
 
   def renderCuboidWithBlock(cuboid: Cuboid, block: Block, metadata: Int = 0): Render[Unit] =
     renderCuboid(cuboid, getTextureForBlock(block, metadata))
 
-  def renderModel(model: Model, getTexture: Side => Icon): Render[Unit] = mk {
+  def renderModel(model: Model, getTexture: BlockSide => Icon): Render[Unit] = mk {
     model.cuboids foreach { c => renderCuboid(c, getTexture).run() }
   }
 
@@ -106,5 +107,23 @@ object Render {
       GL11.glCallList(listIndex)
       a
     }
+  }
+
+  def withGlow[A](r: Render[A]): Render[A] = {
+    for {
+      saved <- Render.liftIO {
+                 (OpenGlHelper.lastBrightnessX, OpenGlHelper.lastBrightnessY)
+               }
+      _     <- Render {
+                 GL11.glPushAttrib(GL11.GL_LIGHTING_BIT)
+                 RenderHelper.disableStandardItemLighting()
+                 OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F)
+               }
+      a     <- r
+      _     <- Render {
+                 OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, saved._1, saved._2)
+                 GL11.glPopAttrib()
+               }
+    } yield (a)
   }
 }

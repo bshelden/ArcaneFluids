@@ -3,7 +3,7 @@ package name.bshelden.arcanefluids.client
 import name.bshelden.arcanefluids.ArcaneFluidsCommonProxy
 import cpw.mods.fml.client.registry.RenderingRegistry
 import net.minecraft.client.renderer.tileentity.{TileEntitySpecialRenderer, TileEntityRenderer}
-import name.bshelden.arcanefluids.block.TileEntityArcaneTank
+import name.bshelden.arcanefluids.block.{TileEntityArcanePipe, TileEntityArcaneTank}
 
 /**
  * Client proxy for arcane fluids
@@ -14,11 +14,18 @@ import name.bshelden.arcanefluids.block.TileEntityArcaneTank
 class ArcaneFluidsClientProxy extends ArcaneFluidsCommonProxy {
   override def registerRenderers() {
     RenderingRegistry.registerBlockHandler(new ArcaneTankRender)
+    RenderingRegistry.registerBlockHandler(new ArcanePipeRender)
 
     val renderMap = TileEntityRenderer.instance.specialRendererMap.asInstanceOf[java.util.Map[Class[_], TileEntitySpecialRenderer]]
 
-    val renderer = new ArcaneTankRender
-    renderMap.put(classOf[TileEntityArcaneTank], renderer)
-    renderer.setTileEntityRenderer(TileEntityRenderer.instance)
+    val rs = Seq(
+      (classOf[TileEntityArcaneTank], new ArcaneTankRender),
+      (classOf[TileEntityArcanePipe], new ArcanePipeRender)
+    )
+
+    rs foreach { case (cls, render) =>
+      renderMap.put(cls, render)
+      render.setTileEntityRenderer(TileEntityRenderer.instance)
+    }
   }
 }

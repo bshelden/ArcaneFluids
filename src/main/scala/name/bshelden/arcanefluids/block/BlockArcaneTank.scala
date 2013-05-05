@@ -1,19 +1,21 @@
 package name.bshelden.arcanefluids.block
 
-import java.util.Random
+import cpw.mods.fml.relauncher.{SideOnly, Side}
 
 import net.minecraft.block.{BlockContainer, Block}
 import net.minecraft.block.material.Material
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.client.renderer.texture.IconRegister
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.item.ItemStack
+import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.Icon
 import net.minecraft.world.{World, IBlockAccess}
-import net.minecraft.tileentity.TileEntity
-import net.minecraft.entity.player.EntityPlayer
+
+import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.liquids.LiquidContainerRegistry
-import net.minecraft.item.ItemStack
+
 import name.bshelden.arcanefluids.client.ArcaneTankRender
-import cpw.mods.fml.relauncher.{SideOnly, Side}
 
 /**
  * Block for the arcane tank
@@ -23,9 +25,10 @@ import cpw.mods.fml.relauncher.{SideOnly, Side}
  */
 class BlockArcaneTank(blockId: Int) extends BlockContainer(blockId, Material.iron) {
   setCreativeTab(CreativeTabs.tabMisc)
-  setHardness(1.5f)
-  setResistance(20f)
-  setStepSound(Block.soundGlassFootstep)
+  setHardness(3.0f)
+  setResistance(40f)
+  setStepSound(Block.soundMetalFootstep)
+  MinecraftForge.setBlockHarvestLevel(this, "pickaxe", 2)
 
   def createNewTileEntity(world: World): TileEntity = new TileEntityArcaneTank
 
@@ -113,8 +116,6 @@ class BlockArcaneTank(blockId: Int) extends BlockContainer(blockId, Material.iro
 
   override def getUnlocalizedName: String = "arcaneTank"
 
-  override def idDropped(metadata: Int, random: Random, fortune: Int): Int = blockId
-
   override def renderAsNormalBlock(): Boolean = false
 
   override def isOpaqueCube: Boolean = false
@@ -123,7 +124,7 @@ class BlockArcaneTank(blockId: Int) extends BlockContainer(blockId, Material.iro
 
   override def getRenderType: Int = ArcaneTankRender.renderId
 
-  override def getIcon(side: Int, metadata: Int): Icon = Block.blockIron.getIcon(side, metadata)
+  override def getIcon(side: Int, metadata: Int): Icon = Block.blockIron.getIcon(side, 1)
 
   @SideOnly(Side.CLIENT)
   override def registerIcons(it: IconRegister) { }
