@@ -23,10 +23,9 @@ class TileEntityArcaneTank extends TileEntity with ITankContainer {
 
   val capacity = LiquidContainerRegistry.BUCKET_VOLUME * 16
 
-  private val tank: LiquidTank = new LiquidTank(capacity)
+  private val tank: ArcaneTankLiquidTank = new ArcaneTankLiquidTank(capacity)
 
   private var tick: Int = 0
-  private var mSavedLiquid: Option[LiquidStack] = None
 
   override def canUpdate: Boolean = true
 
@@ -36,24 +35,8 @@ class TileEntityArcaneTank extends TileEntity with ITankContainer {
       if (tick % 10 == 0) {
         tick = 0
 
-        Option(tank.getLiquid) match {
-          case Some(current) =>
-            mSavedLiquid match {
-              case Some(saved) =>
-                if (!current.isLiquidEqual(saved)) {
-                  worldObj.markBlockForUpdate(xCoord, yCoord, zCoord)
-                  mSavedLiquid = Some(current.copy())
-                }
-
-              case None =>
-                mSavedLiquid = Some(current.copy())
-            }
-
-          case None =>
-            if (mSavedLiquid.isDefined) {
-              worldObj.markBlockForUpdate(xCoord, yCoord, zCoord)
-              mSavedLiquid = None
-            }
+        if (tank.checkChangedAndClear()) {
+          worldObj.markBlockForUpdate(xCoord, yCoord, zCoord)
         }
       }
     }
@@ -142,4 +125,24 @@ object TileEntityArcaneTank {
   val NBT_LIQUID_META = "liquidMeta"
   val NBT_LIQUID_TAG  = "tag"
   val NBT_LIQUID_AMT  = "liquidAmt"
+
+  class ArcaneTankLiquidTank(capacity: Int) extends LiquidTank(capacity) {
+    var changed = false
+
+    def checkChangedAndClear(): Boolean = {
+      val c = changed
+      changed = false
+      c
+    }
+
+    override def fill(resource: LiquidStack, doFill: Boolean): Int = {
+      changed = true
+      super.fill(resource, doFill)
+    }
+
+    override def drain(maxDrain: Int, doDrain: Boolean): LiquidStack = {
+      changed = true
+      super.drain(maxDrain, doDrain)
+    }
+  }
 }
